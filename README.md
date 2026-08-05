@@ -34,6 +34,7 @@ cli/                         # AI Runtime CLI (.py + .yaml), `air run -f ...`
   03_sft_lora_multi/         #   SFT + LoRA, 8xH100 DDP (torchrun)
   04_sft_fullft_zero2/       #   full-param SFT, DeepSpeed ZeRO-2, single 8xH100
   05_sft_fullft_multinode/   #   full-param SFT, ZeRO-2, MULTI-NODE (16x = 2 nodes)
+  06_custom_docker_nemo_rl/  #   custom Docker image (NeMo-RL) — Dockerfile design only
 notebook/                    # notebook (@distributed) variants — single node
 _original_reference/         # the original classic-cluster notebooks, unchanged
 setup/                       # one-time environment prep (wheels, volumes)
