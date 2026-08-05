@@ -1,0 +1,44 @@
+experiment_name: nemotron_nano_gozaru_lora_multi
+mlflow_experiment_directory: /Workspace/Users/hiroshi.ouchiyama@databricks.com
+
+environment:
+  version: 'databricks_ai_v5'
+  dependencies:
+    - transformers==4.57.3
+    - tokenizers==0.22.1
+    - trl
+    - peft
+    - hf_transfer
+    - /Volumes/hiroshi/tmp/wheels/causal_conv1d-1.6.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+    - /Volumes/hiroshi/tmp/wheels/mamba_ssm-2.3.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+
+# Single node, 8 GPUs -> DDP across all 8 via torchrun.
+compute:
+  num_accelerators: 8
+  accelerator_type: GPU_8xH100
+
+code_source:
+  type: snapshot
+  snapshot:
+    root_path: .
+
+command: |
+  cd $CODE_SOURCE_PATH
+  # AIR sets NUM_NODES / LOCAL_WORLD_SIZE / MASTER_ADDR / MASTER_PORT.
+  torchrun \
+    --nnodes="${NUM_NODES:-1}" \
+    --nproc_per_node="${LOCAL_WORLD_SIZE:-8}" \
+    --master_addr="${MASTER_ADDR:-127.0.0.1}" \
+    --master_port="${MASTER_PORT:-29500}" \
+    train.py
+
+env_variables:
+  HF_HUB_ENABLE_HF_TRANSFER: '1'
+  MODEL_ID: nvidia/NVIDIA-Nemotron-Nano-9B-v2
+  DATASET_ID: bbz662bbz/databricks-dolly-15k-ja-gozaru
+  OUTPUT_VOL: /Volumes/hiroshi/tmp/model/lora_adapter_03
+  MAX_STEPS: '-1'
+  NCCL_DEBUG: WARN
+
+max_retries: 0
+timeout_minutes: 240

@@ -1,0 +1,32 @@
+experiment_name: nemotron_nano_run_model
+mlflow_experiment_directory: /Workspace/Users/hiroshi.ouchiyama@databricks.com
+
+environment:
+  version: 'databricks_ai_v5'
+  dependencies:
+    - transformers==4.57.3
+    - tokenizers==0.22.1
+    - hf_transfer
+    # Nemotron-Nano-v2 (Mamba-Transformer hybrid) build deps, prebuilt wheels.
+    - /Volumes/hiroshi/tmp/wheels/causal_conv1d-1.6.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+    - /Volumes/hiroshi/tmp/wheels/mamba_ssm-2.3.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+
+compute:
+  num_accelerators: 1
+  accelerator_type: GPU_1xH100
+
+code_source:
+  type: snapshot
+  snapshot:
+    root_path: .
+
+command: |
+  cd $CODE_SOURCE_PATH
+  python infer.py
+
+env_variables:
+  HF_HUB_ENABLE_HF_TRANSFER: '1'
+  MODEL_ID: nvidia/NVIDIA-Nemotron-Nano-9B-v2
+
+max_retries: 0
+timeout_minutes: 60

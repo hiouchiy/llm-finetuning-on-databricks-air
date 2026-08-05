@@ -1,0 +1,17 @@
+# Python deps for the AI Runtime (SGC) fine-tuning jobs.
+#
+# On AI Runtime these are declared inline in each cli/*/train.yaml under
+# environment.dependencies (the `databricks_ai_v5` base image already provides
+# torch 2.9.0+cu129, so it is NOT listed here). This file mirrors those specs
+# for reference / local tooling.
+transformers==4.57.3
+tokenizers==0.22.1
+trl
+peft
+deepspeed          # only needed for the full-parameter ZeRO-2 steps (04, 05)
+hf_transfer
+
+# Nemotron-Nano-v2 (Mamba-Transformer hybrid) build deps.
+# Staged in a UC Volume — see setup/README.md. Must match torch2.9 / cu12 / cp312.
+# /Volumes/hiroshi/tmp/wheels/causal_conv1d-1.6.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+# /Volumes/hiroshi/tmp/wheels/mamba_ssm-2.3.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
