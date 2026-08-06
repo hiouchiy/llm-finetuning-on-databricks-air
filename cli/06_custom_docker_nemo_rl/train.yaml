@@ -1,5 +1,5 @@
 experiment_name: nemotron_nemo_rl_custom_docker
-mlflow_experiment_directory: /Workspace/Users/hiroshi.ouchiyama@databricks.com
+mlflow_experiment_directory: /Workspace/Users/<your-username>@example.com
 
 # Custom Docker image path. When environment.docker_image is set you CANNOT also
 # use environment.dependencies or environment.version — everything must be baked
@@ -7,7 +7,7 @@ mlflow_experiment_directory: /Workspace/Users/hiroshi.ouchiyama@databricks.com
 #
 # Register the image first (Docker Hub only):
 #   air register image <your-dockerhub-user>/air-nemo-rl:v1 \
-#     --interactive-authenticate -p e2-demo-field-eng
+#     --interactive-authenticate -p <your-profile>
 environment:
   docker_image:
     url: <your-dockerhub-user>/air-nemo-rl:v1

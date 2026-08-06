@@ -1,5 +1,5 @@
 experiment_name: nemotron_nano_run_model
-mlflow_experiment_directory: /Workspace/Users/hiroshi.ouchiyama@databricks.com
+mlflow_experiment_directory: /Workspace/Users/<your-username>@example.com
 
 environment:
   version: 'databricks_ai_v5'
@@ -8,8 +8,8 @@ environment:
     - tokenizers==0.22.1
     - hf_transfer
     # Nemotron-Nano-v2 (Mamba-Transformer hybrid) build deps, prebuilt wheels.
-    - /Volumes/hiroshi/tmp/wheels/causal_conv1d-1.6.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
-    - /Volumes/hiroshi/tmp/wheels/mamba_ssm-2.3.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+    - /Volumes/<catalog>/<schema>/wheels/causal_conv1d-1.6.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+    - /Volumes/<catalog>/<schema>/wheels/mamba_ssm-2.3.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
 
 compute:
   num_accelerators: 1

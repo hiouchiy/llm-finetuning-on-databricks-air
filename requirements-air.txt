@@ -13,5 +13,5 @@ hf_transfer
 
 # Nemotron-Nano-v2 (Mamba-Transformer hybrid) build deps.
 # Staged in a UC Volume — see setup/README.md. Must match torch2.9 / cu12 / cp312.
-# /Volumes/hiroshi/tmp/wheels/causal_conv1d-1.6.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
-# /Volumes/hiroshi/tmp/wheels/mamba_ssm-2.3.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+# /Volumes/<catalog>/<schema>/wheels/causal_conv1d-1.6.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+# /Volumes/<catalog>/<schema>/wheels/mamba_ssm-2.3.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl

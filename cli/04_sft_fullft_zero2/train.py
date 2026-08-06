@@ -40,7 +40,7 @@ MODEL_ID = os.environ.get("MODEL_ID", "nvidia/NVIDIA-Nemotron-Nano-9B-v2")
 DATASET_ID = os.environ.get("DATASET_ID", "bbz662bbz/databricks-dolly-15k-ja-gozaru")
 JSONL_PATH = os.environ.get("JSONL_PATH", "")
 OUTPUT_VOL = os.environ.get(
-    "OUTPUT_VOL", "/Volumes/hiroshi/tmp/model/nemotron_nano_gozaru_fullft_zero2"
+    "OUTPUT_VOL", "/Volumes/<catalog>/<schema>/model/nemotron_nano_gozaru_fullft_zero2"
 )
 
 os.environ.setdefault("HF_HUB_ENABLE_HF_TRANSFER", "1")

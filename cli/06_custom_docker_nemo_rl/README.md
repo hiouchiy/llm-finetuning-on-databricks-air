@@ -40,10 +40,10 @@ docker buildx build --platform linux/amd64 \
 
 # 2) REGISTER the image with AIR (Docker Hub only)
 air register image <your-dockerhub-user>/air-nemo-rl:v1 \
-  --interactive-authenticate -p e2-demo-field-eng
+  --interactive-authenticate -p <your-profile>
 
 # 3) RUN — edit train.yaml: set docker_image.url + the real NeMo-RL entry point
-air run -f train.yaml -p e2-demo-field-eng --watch
+air run -f train.yaml -p <your-profile> --watch
 ```
 
 ## ⚠️ Status / not yet build-verified

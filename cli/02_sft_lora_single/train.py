@@ -48,7 +48,7 @@ DATASET_ID = os.environ.get("DATASET_ID", "bbz662bbz/databricks-dolly-15k-ja-goz
 # Optional: read a pre-materialized JSONL from a UC Volume instead of HF hub.
 JSONL_PATH = os.environ.get("JSONL_PATH", "")
 OUTPUT_VOL = os.environ.get(
-    "OUTPUT_VOL", "/Volumes/hiroshi/tmp/model/lora_adapter_02"
+    "OUTPUT_VOL", "/Volumes/<catalog>/<schema>/model/lora_adapter_02"
 )
 
 os.environ.setdefault("HF_HUB_ENABLE_HF_TRANSFER", "1")

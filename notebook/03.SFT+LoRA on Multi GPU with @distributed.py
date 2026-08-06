@@ -18,8 +18,8 @@
 
 # MAGIC %pip install transformers==4.57.3 tokenizers==0.22.1 trl peft hf_transfer
 # MAGIC # Nemotron-Nano-v2 (Mamba-Transformer hybrid) build deps — staged in a UC Volume.
-# MAGIC %pip install /Volumes/hiroshi/tmp/wheels/causal_conv1d-1.6.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
-# MAGIC %pip install /Volumes/hiroshi/tmp/wheels/mamba_ssm-2.3.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+# MAGIC %pip install /Volumes/<catalog>/<schema>/wheels/causal_conv1d-1.6.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+# MAGIC %pip install /Volumes/<catalog>/<schema>/wheels/mamba_ssm-2.3.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------

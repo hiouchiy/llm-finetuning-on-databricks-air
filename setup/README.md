@@ -14,11 +14,11 @@ official prebuilt wheels in a UC Volume once and reference them from each
 ## Steps
 
 ```bash
-export DATABRICKS_CONFIG_PROFILE=e2-demo-field-eng
+export DATABRICKS_CONFIG_PROFILE=<your-profile>
 
 # 1) Create the volume (once)
-databricks schemas create tmp hiroshi
-databricks volumes create hiroshi tmp wheels MANAGED
+databricks schemas create <schema> <catalog>
+databricks volumes create <catalog> <schema> wheels MANAGED
 
 # 2) Download the prebuilt wheels (torch2.9 / cu12 / cp312 / cxx11abiTRUE)
 CC=causal_conv1d-1.6.1+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
@@ -27,8 +27,8 @@ curl -sL -o "$CC" "https://github.com/Dao-AILab/causal-conv1d/releases/download/
 curl -sL -o "$MS" "https://github.com/state-spaces/mamba/releases/download/v2.3.1/$MS"
 
 # 3) Upload to the UC Volume
-databricks fs cp "$CC" "dbfs:/Volumes/hiroshi/tmp/wheels/$CC" --overwrite
-databricks fs cp "$MS" "dbfs:/Volumes/hiroshi/tmp/wheels/$MS" --overwrite
+databricks fs cp "$CC" "dbfs:/Volumes/<catalog>/<schema>/wheels/$CC" --overwrite
+databricks fs cp "$MS" "dbfs:/Volumes/<catalog>/<schema>/wheels/$MS" --overwrite
 ```
 
 If your runtime's torch/cuda/python ever change, pick matching wheels from:

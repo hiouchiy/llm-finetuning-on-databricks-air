@@ -10,7 +10,7 @@ run on **AI Runtime**, where there is no Spark cluster to manage — you submit
 jobs to serverless H100s via the `air` CLI, or launch multi-GPU work from a
 notebook with the `@distributed` decorator.
 
-> Validated on `e2-demo-field-eng` (AWS). AI Runtime is Public Preview and, at
+> Validated on `<your-profile>` (AWS). AI Runtime is Public Preview and, at
 > the time of writing, US-region AWS/Azure only. Multi-node H100 (step 05) is
 > available on AWS; **not yet on Azure**.
 
@@ -45,9 +45,9 @@ setup/                       # one-time environment prep (wheels, volumes)
 1. **AI Runtime CLI** (`air`), Public Preview:
    see <https://docs.databricks.com/aws/en/machine-learning/ai-runtime/cli/>.
 2. A Databricks profile with AI Runtime enabled (this repo uses
-   `-p e2-demo-field-eng`).
+   `-p <your-profile>`).
 3. A UC Volume for outputs and staged wheels (this repo uses the
-   `hiroshi.tmp.*` volumes; change the paths in the YAMLs to your own).
+   `<catalog>.<schema>.*` volumes; change the paths in the YAMLs to your own).
 4. One-time setup: stage the Mamba build wheels — see [setup/README.md](setup/README.md).
 
 ## Nemotron-Nano-v2 needs `mamba_ssm` + `causal_conv1d`
@@ -65,10 +65,10 @@ torch/CUDA/Python **exactly**. AI Runtime `databricks_ai_v5` ships
 export COPYFILE_DISABLE=1
 
 cd cli/02_sft_lora_single
-air run -f train.yaml -p e2-demo-field-eng --watch
+air run -f train.yaml -p <your-profile> --watch
 
 # quick smoke test: cap the steps
-air run -f train.yaml -p e2-demo-field-eng --override env_variables.MAX_STEPS=5
+air run -f train.yaml -p <your-profile> --override env_variables.MAX_STEPS=5
 ```
 
 Outputs (LoRA adapters / full models) are copied to the `OUTPUT_VOL` UC Volume
