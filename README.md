@@ -74,6 +74,25 @@ air run -f train.yaml -p <your-profile> --override env_variables.MAX_STEPS=5
 Outputs (LoRA adapters / full models) are copied to the `OUTPUT_VOL` UC Volume
 and logged to the MLflow experiment under `mlflow_experiment_directory`.
 
+## Datasets (schema auto-detection)
+
+The training scripts auto-detect the dataset schema in `to_messages()`, so you
+can switch datasets by overriding `DATASET_ID` — no code change needed:
+
+| Dataset | Schema | Handling |
+|---|---|---|
+| `bbz662bbz/databricks-dolly-15k-ja-gozaru` (default) | `instruction` / `input` / `output` | assembled into a single user→assistant turn |
+| `llm-jp/magpie-sft-v1.0` | `conversations` (list of `{role, content}`) | used as-is; a `system` turn is prepended only if absent |
+
+```bash
+# Use the magpie conversations dataset instead of the default:
+air run -f train.yaml -p <your-profile> \
+  --override env_variables.DATASET_ID=llm-jp/magpie-sft-v1.0
+```
+
+A dataset that has neither `conversations` nor `instruction/input/output` will
+need a small addition to `to_messages()`.
+
 ## Gotchas learned during the port
 
 - **Do not `mlflow.start_run()` and do not use `report_to=["mlflow"]`.** AI

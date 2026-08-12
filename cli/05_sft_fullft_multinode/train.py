@@ -58,6 +58,26 @@ def build_user_text(ex):
     return f"{inst}\n\n[入力]\n{inp}" if inp else inst
 
 
+def to_messages(ex):
+    """Return an OpenAI-style [{role, content}] list for one example.
+
+    Auto-detects the dataset schema:
+      * conversations (list of {role, content}) — e.g. llm-jp/magpie-sft-v1.0.
+      * instruction / input / output — e.g. databricks-dolly-15k-ja-gozaru.
+    """
+    conv = ex.get("conversations")
+    if conv:
+        messages = [dict(t) for t in conv]
+        if not messages or messages[0].get("role") != "system":
+            messages = [{"role": "system", "content": "/no_think"}] + messages
+        return messages
+    return [
+        {"role": "system", "content": "/no_think"},
+        {"role": "user", "content": build_user_text(ex)},
+        {"role": "assistant", "content": (ex.get("output") or "").strip()},
+    ]
+
+
 def main():
     local_rank = int(os.environ.get("LOCAL_RANK", "0"))
     if not dist.is_initialized():
@@ -77,13 +97,8 @@ def main():
         tokenizer.pad_token = tokenizer.eos_token
 
     def to_text(ex):
-        messages = [
-            {"role": "system", "content": "/no_think"},
-            {"role": "user", "content": build_user_text(ex)},
-            {"role": "assistant", "content": (ex.get("output") or "").strip()},
-        ]
         text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=False
+            to_messages(ex), tokenize=False, add_generation_prompt=False
         )
         return {"text": text}
 

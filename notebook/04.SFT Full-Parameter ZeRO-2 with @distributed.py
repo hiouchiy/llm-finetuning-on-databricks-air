@@ -71,13 +71,22 @@ def train_nemotron_fullft_zero2():
         inp = (ex.get("input") or "").strip()
         return f"{inst}\n\n[入力]\n{inp}" if inp else inst
 
-    def to_text(ex):
-        messages = [
+    def to_messages(ex):
+        # Auto-detect: conversations (magpie) used as-is; else instruction/input/output (dolly).
+        conv = ex.get("conversations")
+        if conv:
+            messages = [dict(t) for t in conv]
+            if not messages or messages[0].get("role") != "system":
+                messages = [{"role": "system", "content": "/no_think"}] + messages
+            return messages
+        return [
             {"role": "system", "content": "/no_think"},
             {"role": "user", "content": build_user_text(ex)},
             {"role": "assistant", "content": (ex.get("output") or "").strip()},
         ]
-        return {"text": tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)}
+
+    def to_text(ex):
+        return {"text": tokenizer.apply_chat_template(to_messages(ex), tokenize=False, add_generation_prompt=False)}
 
     ds = load_dataset(DATASET_ID, split="train").map(to_text)
 
