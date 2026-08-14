@@ -42,16 +42,15 @@ RUN git clone --filter=blob:none "${NEMO_RL_REPO}" /opt/nemo-rl \
     && git checkout "${NEMO_RL_REF}" \
     && git submodule update --init --recursive
 
-# Install torch FIRST at the version NeMo-RL pins, so subsequent CUDA-extension
-# builds (TE, flash-attn, mamba) compile against the right torch ABI. The AIR
-# base ships CUDA 12.9 but no torch; cu12 torch wheels are ABI-compatible across
-# CUDA 12.x minors.
-RUN uv pip install --no-cache "torch==2.7.1" "torchvision>=0.22.0"
-
-# Install NeMo-RL and let its pyproject resolve the consistent dependency set
-# (vllm==0.10.0, transformer-engine==2.5.0, mamba-ssm, causal-conv1d, flash-attn).
-# --no-build-isolation lets TE/mamba see the torch we just installed.
-RUN uv pip install --no-cache --no-build-isolation -e /opt/nemo-rl
+# Install via NeMo-RL's OWN uv workspace, not hand-rolled pip. Its pyproject
+# defines [tool.uv.sources] (git-pinned mamba-ssm/causal-conv1d), a cu128 torch
+# index, flash-attn dependency-metadata, no-build-isolation-package, and a build
+# dependency-group. `uv sync` honors all of that; `uv pip install` does not.
+# mamba/causal/vllm/flash-attn live under the `vllm` extra (also in `mcore`).
+# Point uv at the AIR-managed venv so everything lands in /opt/venv (what AIR runs).
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+RUN cd /opt/nemo-rl && uv sync --extra vllm --locked || \
+    (echo "no lockfile or locked sync failed; retrying unlocked" && cd /opt/nemo-rl && uv sync --extra vllm)
 
 # MLflow client for logging to the AIR-owned run (see steps 01-05).
 RUN uv pip install --no-cache "mlflow>=3.6" hf_transfer
