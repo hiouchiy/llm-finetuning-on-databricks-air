@@ -35,6 +35,30 @@ export DBX_PROFILE="<your-azure-databricks-profile>"
 
 ---
 
+### 0.5. Clone this repo (on your laptop)
+
+The repo is **private**, so use the GitHub CLI (already authenticated) or an SSH
+key. Pick one:
+
+```bash
+# Option A — GitHub CLI (simplest if `gh auth status` is logged in)
+gh repo clone hiouchiy/llm-finetuning-on-databricks-air
+cd llm-finetuning-on-databricks-air
+
+# Option B — HTTPS (will prompt for a GitHub Personal Access Token)
+git clone https://github.com/hiouchiy/llm-finetuning-on-databricks-air.git
+cd llm-finetuning-on-databricks-air
+
+# Option C — SSH (if you have an SSH key on GitHub)
+git clone git@github.com:hiouchiy/llm-finetuning-on-databricks-air.git
+cd llm-finetuning-on-databricks-air
+```
+
+From here on, run commands **from the repo root** (the folder you just `cd`'d
+into). The file you build is `cli/06_custom_docker_nemo_rl/Dockerfile`.
+
+---
+
 ### 1. Create the Azure VM (Ubuntu 22.04, big OS disk)
 
 Run on your laptop (needs `az` CLI logged in: `az login`).
@@ -88,7 +112,7 @@ If it says "re-login needed", just `ssh` in again (new shell picks up the group)
 
 ### 3. Copy the Dockerfile to the VM
 
-Run from this repo directory (where the `Dockerfile` sits):
+Run from the repo root you cloned in step 0.5:
 
 ```bash
 scp cli/06_custom_docker_nemo_rl/Dockerfile "$AZ_ADMIN@$VM_IP:~/Dockerfile"
