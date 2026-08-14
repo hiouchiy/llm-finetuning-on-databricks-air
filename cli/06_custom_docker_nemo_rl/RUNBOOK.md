@@ -120,6 +120,12 @@ scp cli/06_custom_docker_nemo_rl/Dockerfile "$AZ_ADMIN@$VM_IP:~/Dockerfile"
 
 ---
 
+> **AWS target?** Use `Dockerfile.aws` instead of `Dockerfile` (identical except
+> the base is `dcs-base-aws-devel` with EFA networking). Build it on the SAME VM
+> — the build host's cloud is irrelevant; only `--platform linux/amd64` matters.
+> Just point `-f` at `~/Dockerfile.aws` and use a distinct tag, e.g.
+> `<registry-user>/air-nemo-rl:v0.4.0-aws`.
+
 ### 4. Build and push to Docker Hub (on the VM)
 
 ```bash

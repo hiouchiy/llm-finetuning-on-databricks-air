@@ -1,0 +1,86 @@
+# syntax=docker/dockerfile:1
+#
+# Custom AI Runtime (AWS) image reproducing NVIDIA NeMo-RL v0.4.0
+# (reference: nvcr.io/nvidia/nemo-rl:v0.4.0.nemotron_3_nano), built to run on
+# Databricks AI Runtime serverless GPU on **AWS**.
+#
+# This is the AWS sibling of ./Dockerfile (Azure). The ONLY difference is the
+# base image: `dcs-base-aws-devel` ships AWS EFA networking (the Azure base
+# ships InfiniBand). Everything else — CUDA 12.9.1, venv /opt/venv, the whole
+# NeMo-RL install/cuDNN/cache logic — is identical and base-agnostic.
+#
+# Build location is irrelevant: an AWS-targeted image builds fine on an Azure VM
+# (or anywhere) as long as it's --platform linux/amd64. The build VM's cloud is
+# not baked into the image; only the FROM base determines the target networking.
+#
+# NeMo-RL v0.4.0 pins: torch==2.7.1 (cu128), vllm==0.10.0,
+# transformer-engine==2.5.0, mamba-ssm, causal-conv1d, flash-attn.
+#
+# BUILD PLATFORM: linux/amd64 only (AIR workers are x86_64). Build needs no GPU.
+
+FROM databricksruntime/air:dcs-base-aws-devel
+
+ARG NEMO_RL_REF=v0.4.0
+ARG NEMO_RL_REPO=https://github.com/NVIDIA/NeMo-RL.git
+
+# H100 = sm90. (Add 10.0 for Blackwell if you later target B200.)
+ENV TORCH_CUDA_ARCH_LIST="9.0"
+ENV MAX_JOBS=8
+
+# TE compiles against cuDNN; base image has no system cudnn.h. NeMo-RL installs
+# the nvidia-cudnn-cu12 wheel (before TE builds) with headers under
+# site-packages/nvidia/cudnn/{include,lib}. Point the compiler/linker there
+# (avoids adding a 2nd cuDNN copy).
+ENV CPATH=/opt/venv/lib/python3.12/site-packages/nvidia/cudnn/include:${CPATH:-}
+ENV LIBRARY_PATH=/opt/venv/lib/python3.12/site-packages/nvidia/cudnn/lib:${LIBRARY_PATH:-}
+ENV LD_LIBRARY_PATH=/opt/venv/lib/python3.12/site-packages/nvidia/cudnn/lib:${LD_LIBRARY_PATH:-}
+
+# CUDA C++ extensions built from source need Python.h + a C/C++ toolchain.
+# Base image uses system Python 3.12.3, so python3.12-dev is an exact match.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3.12-dev build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone NeMo-RL at the pinned tag (submodules incl. the Megatron path).
+RUN git clone --filter=blob:none "${NEMO_RL_REPO}" /opt/nemo-rl \
+    && cd /opt/nemo-rl \
+    && git checkout "${NEMO_RL_REF}" \
+    && git submodule update --init --recursive
+
+# Install via NeMo-RL's own uv workspace (honors its pinned cu128 torch index,
+# git-pinned mamba/causal, flash-attn metadata, no-build-isolation, build group).
+# vllm extra -> mamba/causal/vllm/flash-attn; mcore extra -> transformer-engine.
+# Land everything in the AIR venv (/opt/venv). Clean caches in the SAME layer to
+# stay under AIR's 20 GB limit.
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+RUN cd /opt/nemo-rl \
+    && ( uv sync --extra vllm --extra mcore --locked \
+         || (echo "locked sync failed; retrying unlocked" && uv sync --extra vllm --extra mcore) ) \
+    && uv cache clean \
+    && rm -rf /root/.cache/uv /root/.cache/pip /tmp/* \
+    && find /opt/venv -name '*.pyc' -delete \
+    && find /opt/venv -type d -name '__pycache__' -prune -exec rm -rf {} + \
+    && rm -rf /opt/nemo-rl/.git
+
+RUN uv pip install --no-cache "mlflow>=3.6" hf_transfer
+
+# GPU-less build: verify packages are INSTALLED (find_spec). Full GPU import
+# (triton/TE need a driver) runs on AIR at first job launch.
+RUN python - <<'PY'
+import importlib.util, torch
+print("torch", torch.__version__, "cuda", torch.version.cuda)
+missing = [m for m in ["mamba_ssm","causal_conv1d","transformer_engine","vllm","flash_attn"]
+           if importlib.util.find_spec(m) is None]
+if missing:
+    raise SystemExit(f"MISSING packages: {missing}")
+print("OK installed:", "mamba_ssm causal_conv1d transformer_engine vllm flash_attn")
+if torch.cuda.is_available():
+    import mamba_ssm, causal_conv1d, transformer_engine, vllm, flash_attn
+    print("OK GPU import (all)")
+else:
+    print("no GPU on build host -> skipped runtime import (runs on AIR)")
+PY
+
+# NOTE: AIR ignores ENTRYPOINT/WORKDIR — use absolute paths in the workload YAML
+# command. FIPS: set OPENSSL_FORCE_FIPS_MODE=0 if SSL errors appear and
+# compliance does not require FIPS.
