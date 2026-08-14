@@ -54,11 +54,12 @@ RUN git clone --filter=blob:none "${NEMO_RL_REPO}" /opt/nemo-rl \
 # defines [tool.uv.sources] (git-pinned mamba-ssm/causal-conv1d), a cu128 torch
 # index, flash-attn dependency-metadata, no-build-isolation-package, and a build
 # dependency-group. `uv sync` honors all of that; `uv pip install` does not.
-# mamba/causal/vllm/flash-attn live under the `vllm` extra (also in `mcore`).
-# Point uv at the AIR-managed venv so everything lands in /opt/venv (what AIR runs).
+# Extras: `vllm` provides mamba/causal/vllm/flash-attn; `mcore` provides
+# transformer-engine[pytorch]==2.5.0 (the Megatron path). Both are needed for a
+# full NeMo-RL stack. Point uv at the AIR-managed venv (/opt/venv = what AIR runs).
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
-RUN cd /opt/nemo-rl && uv sync --extra vllm --locked || \
-    (echo "no lockfile or locked sync failed; retrying unlocked" && cd /opt/nemo-rl && uv sync --extra vllm)
+RUN cd /opt/nemo-rl && uv sync --extra vllm --extra mcore --locked || \
+    (echo "no lockfile or locked sync failed; retrying unlocked" && cd /opt/nemo-rl && uv sync --extra vllm --extra mcore)
 
 # MLflow client for logging to the AIR-owned run (see steps 01-05).
 RUN uv pip install --no-cache "mlflow>=3.6" hf_transfer
