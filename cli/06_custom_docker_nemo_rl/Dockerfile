@@ -36,6 +36,14 @@ ENV TORCH_CUDA_ARCH_LIST="9.0"
 # Keep CUDA-extension builds from trying every arch / oversubscribing.
 ENV MAX_JOBS=8
 
+# CUDA C++ extensions built from source (deep-gemm, flash-attn, mamba, TE) need
+# the Python dev headers (Python.h) + a C/C++ toolchain. The base image's Python
+# is the system Python 3.12.3, so python3.12-dev provides an exact-version match
+# at /usr/include/python3.12 (what the compiler's -I flag looks for).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3.12-dev build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 # Clone NeMo-RL at the pinned tag (submodules incl. the Megatron path).
 RUN git clone --filter=blob:none "${NEMO_RL_REPO}" /opt/nemo-rl \
     && cd /opt/nemo-rl \
