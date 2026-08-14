@@ -36,6 +36,15 @@ ENV TORCH_CUDA_ARCH_LIST="9.0"
 # Keep CUDA-extension builds from trying every arch / oversubscribing.
 ENV MAX_JOBS=8
 
+# Transformer-Engine compiles against cuDNN (torch's ATen/cudnn/cudnn-wrapper.h
+# does `#include <cudnn.h>`), but the base image has no system cuDNN headers.
+# NeMo-RL pulls the `nvidia-cudnn-cu12` wheel (installed by `uv sync` BEFORE it
+# builds TE), which ships cudnn.h under site-packages/nvidia/cudnn/{include,lib}.
+# Point the compiler/linker at that pip cuDNN so we don't add a 2nd cuDNN copy.
+ENV CPATH=/opt/venv/lib/python3.12/site-packages/nvidia/cudnn/include:${CPATH:-}
+ENV LIBRARY_PATH=/opt/venv/lib/python3.12/site-packages/nvidia/cudnn/lib:${LIBRARY_PATH:-}
+ENV LD_LIBRARY_PATH=/opt/venv/lib/python3.12/site-packages/nvidia/cudnn/lib:${LD_LIBRARY_PATH:-}
+
 # CUDA C++ extensions built from source (deep-gemm, flash-attn, mamba, TE) need
 # the Python dev headers (Python.h) + a C/C++ toolchain. The base image's Python
 # is the system Python 3.12.3, so python3.12-dev provides an exact-version match
@@ -58,8 +67,18 @@ RUN git clone --filter=blob:none "${NEMO_RL_REPO}" /opt/nemo-rl \
 # transformer-engine[pytorch]==2.5.0 (the Megatron path). Both are needed for a
 # full NeMo-RL stack. Point uv at the AIR-managed venv (/opt/venv = what AIR runs).
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
-RUN cd /opt/nemo-rl && uv sync --extra vllm --extra mcore --locked || \
-    (echo "no lockfile or locked sync failed; retrying unlocked" && cd /opt/nemo-rl && uv sync --extra vllm --extra mcore)
+# Clean uv/build caches in the SAME layer so they don't get baked into the image
+# (the base image + full NeMo-RL stack is ~21.6 GB; AIR's limit is 20 GB, so we
+# must strip build-time caches). Cleaning in a later RUN would not shrink the
+# earlier layer.
+RUN cd /opt/nemo-rl \
+    && ( uv sync --extra vllm --extra mcore --locked \
+         || (echo "locked sync failed; retrying unlocked" && uv sync --extra vllm --extra mcore) ) \
+    && uv cache clean \
+    && rm -rf /root/.cache/uv /root/.cache/pip /tmp/* \
+    && find /opt/venv -name '*.pyc' -delete \
+    && find /opt/venv -type d -name '__pycache__' -prune -exec rm -rf {} + \
+    && rm -rf /opt/nemo-rl/.git
 
 # MLflow client for logging to the AIR-owned run (see steps 01-05).
 RUN uv pip install --no-cache "mlflow>=3.6" hf_transfer
